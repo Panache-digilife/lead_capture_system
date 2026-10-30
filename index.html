@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#1B2A4A" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<title>Event Lead Capture — Login</title>
+<style>
+  :root {
+    --navy: #1B2A4A;
+    --accent: #3E7BFA;
+    --ice: #EAF0FB;
+    --gray: #5B6472;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--ice);
+    color: var(--navy);
+    overscroll-behavior-y: contain; /* blocks accidental pull-to-refresh */
+  }
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 32px 26px;
+    margin: 20px;
+    box-shadow: 0 4px 16px rgba(27,42,74,0.08);
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+    text-align: center;
+  }
+  p.sub {
+    margin: 0 0 22px;
+    text-align: center;
+    color: var(--gray);
+    font-size: 13px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray);
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 10px;
+    border: 1px solid #DCE6F7;
+    font-size: 15px;
+    background: #fff;
+    color: var(--navy);
+  }
+  input:focus { outline: 2px solid var(--accent); }
+  button {
+    width: 100%;
+    border: none;
+    border-radius: 24px;
+    padding: 14px;
+    margin-top: 18px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+    background: var(--accent);
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error {
+    color: #D65A56;
+    font-size: 12.5px;
+    margin-top: 8px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Event Lead Capture</h1>
+    <p class="sub">Enter your name to start capturing leads</p>
+    <form id="loginForm">
+      <label for="repName">Your Name</label>
+      <input id="repName" name="repName" type="text" placeholder="e.g. Priya Sharma" required autocomplete="name" />
+      <div class="error" id="loginError">Please enter your name.</div>
+      <button type="submit">Continue</button>
+    </form>
+  </div>
+
+  <script>
+    // Register the service worker that caches the app shell, so a reload
+    // while offline (e.g. an accidental pull-to-refresh) still renders the
+    // app instead of the browser's native offline page.
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((err) => {
+          console.error("Service worker registration failed:", err);
+        });
+      });
+    }
+
+    const REP_NAME_KEY = "lead_capture_rep_name";
+
+    // If a rep name is already stored, skip straight to the dashboard rather
+    // than making them re-enter it every time the page loads.
+    if (localStorage.getItem(REP_NAME_KEY)) {
+      window.location.href = "dashboard.html";
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const value = document.getElementById("repName").value.trim();
+      const errorEl = document.getElementById("loginError");
+      if (!value) {
+        errorEl.style.display = "block";
+        return;
+      }
+      errorEl.style.display = "none";
+      localStorage.setItem(REP_NAME_KEY, value);
+      window.location.href = "dashboard.html";
+    });
+  </script>
+</body>
+</html>

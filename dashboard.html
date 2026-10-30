@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#ffffff" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<title>Lead Capture</title>
+<style>
+/* ── ORIGINAL TOKENS — untouched ─────────────────────── */
+:root {
+  --navy:   #1B2A4A;
+  --accent: #3E7BFA;
+  --ice:    #EAF0FB;
+  --gray:   #5B6472;
+  --green:  #2FA36B;
+  --red:    #D65A56;
+}
+
+/* ── RESET ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: #f5f7fa;
+  color: var(--navy);
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: env(safe-area-inset-bottom, 24px);
+}
+
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 72px;
+}
+
+/* ── HEADER ──────────────────────────────────────────── */
+.app-header {
+  padding: 20px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #E4ECFA;
+  margin-bottom: 20px;
+}
+.app-header-brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -.3px;
+}
+.app-header-brand span {
+  color: var(--accent);
+}
+.app-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.conn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: .1px;
+}
+.conn-badge.offline { color: var(--red); }
+.conn-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.rep-line {
+  font-size: 11px;
+  color: var(--gray);
+}
+.rep-line strong { color: var(--navy); font-weight: 600; }
+.rep-line a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* ── SYNC BANNER ─────────────────────────────────────── */
+.sync-banner {
+  display: none;
+  background: #FFF6E5;
+  border: 1px solid #F3D99A;
+  border-radius: 12px;
+  padding: 11px 14px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: #8A6100;
+}
+.sync-banner.show { display: block; }
+.sync-banner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sync-now-btn {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: 20px;
+  border: none;
+  background: #8A6100;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.progress-track {
+  height: 4px;
+  background: #F3E3B8;
+  border-radius: 2px;
+  margin-top: 10px;
+  display: none;
+  overflow: hidden;
+}
+.progress-track.show { display: block; }
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #8A6100;
+  border-radius: 2px;
+  transition: width .15s;
+}
+
+/* ── STEPPER ─────────────────────────────────────────── */
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding: 0 4px;
+}
+.step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+.step::after {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: calc(50% + 16px);
+  right: calc(-50% + 16px);
+  height: 1px;
+  background: #DCE6F7;
+  transition: background .3s;
+}
+.step:last-child::after { display: none; }
+.step.done::after { background: var(--green); }
+.step-node {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid #DCE6F7;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #B0BDD0;
+  transition: all .25s;
+  position: relative;
+  z-index: 1;
+}
+.step.active .step-node {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--ice);
+}
+.step.done .step-node {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+.step-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #B0BDD0;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+.step.active .step-name { color: var(--accent); }
+.step.done .step-name { color: var(--green); }
+
+/* ── CARDS ───────────────────────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(27,42,74,.06), 0 4px 16px rgba(27,42,74,.07);
+  border: 1px solid transparent;
+  transition: border-color .2s;
+}
+.card.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 1px 4px rgba(27,42,74,.06), 0 4px 20px rgba(62,123,250,.12);
+}
+.card.is-done {
+  border-color: #C8EDD9;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.card-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: var(--ice);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.card-icon svg { display: block; }
+.a-icon svg { display: block; width: 22px; height: 22px; color: var(--navy); }
+.card-icon.green-bg { background: #E6F7EF; }
+.card-icon.red-bg   { background: #FAEAEA; }
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -.2px;
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 1px;
+}
+
+/* ── CAMERA / PREVIEW ────────────────────────────────── */
+video, img.preview {
+  width: 100%;
+  border-radius: 12px;
+  display: none;
+  margin-bottom: 12px;
+  background: #000;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+.video-wrap { position: relative; }
+.video-wrap video { margin-bottom: 12px; transform: scaleX(-1); }
+.video-wrap video.rear-cam { transform: none; }
+.btn-switch-cam {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  z-index: 2;
+}
+.btn-switch-cam svg { width: 18px; height: 18px; }
+
+/* ── ACTION BUTTONS ──────────────────────────────────── */
+/* ── BUTTONS — exact original design ── */
+  button {
+    border: none;
+    border-radius: 24px;
+    padding: 13px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #fff;
+    width: 100%;
+    margin-top: 10px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button:first-of-type { margin-top: 0; }
+  .btn-scan   { background: var(--navy); }
+  .btn-record { background: var(--accent); }
+  .btn-stop   { background: var(--red); display: none; }
+  .btn-photo  { background: var(--navy); }
+  .btn-submit { background: var(--green); padding: 15px; font-size: 15px; margin-top: 0; }
+  .btn-done   { background: var(--green); }
+
+/* ── STATUS ROW ──────────────────────────────────────── */
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 13px;
+  font-size: 12.5px;
+  color: var(--gray);
+  min-height: 18px;
+}
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #C7D3EA;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.dot.active { background: var(--red); animation: pulse 1s infinite; }
+.dot.done   { background: var(--green); }
+.dot.warn   { background: #F59E0B; }
+@keyframes pulse { 50% { opacity: .3; } }
+
+/* ── EXTRACTED FIELDS ────────────────────────────────── */
+.extracted {
+  display: none;
+  margin-top: 14px;
+  background: #F4FBF7;
+  border: 1px solid #C8EDD9;
+  border-radius: 12px;
+  padding: 14px;
+}
+.extracted.show { display: block; }
+.extracted-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.ef-row {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.ef-row:last-child { margin-bottom: 0; }
+.ef-key {
+  min-width: 58px;
+  font-weight: 600;
+  color: var(--gray);
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.ef-val { color: var(--navy); word-break: break-all; }
+
+/* ── AUDIO PREVIEW ───────────────────────────────────── */
+#audioPreview {
+  width: 100%;
+  margin-top: 13px;
+  display: none;
+  height: 38px;
+  border-radius: 8px;
+}
+
+/* ── SUBMIT ──────────────────────────────────────────── */
+.submit-wrap {
+  margin-top: 4px;
+}
+.submit-btn {
+  width: 100%;
+  padding: 17px;
+  border: none;
+  border-radius: 14px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.1px;
+  cursor: pointer;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.submit-btn:active { transform: scale(.985); }
+.submit-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+.submit-status {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+.submit-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gray);
+}
+.submit-prog-track {
+  height: 4px;
+  background: #E4ECFA;
+  border-radius: 2px;
+  overflow: hidden;
+  display: none;
+}
+.submit-prog-track.show { display: block; }
+.submit-prog-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width .15s;
+}
+
+/* ── TOAST ───────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) translateY(10px);
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  z-index: 9999;
+  max-width: 88vw;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(27,42,74,.25);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.success { background: var(--green); }
+#toast.error   { background: var(--red); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-brand">Capture <span>Leads</span></div>
+    <div class="app-header-right">
+      <span class="conn-badge" id="connBadge">
+        <span class="conn-dot"></span>
+        <span id="connLabel">Online</span>
+      </span>
+      <span class="rep-line">
+        <strong id="repNameDisplay">—</strong>
+        <a href="#" id="switchUserLink">Switch</a>
+      </span>
+    </div>
+  </header>
+
+  <!-- SYNC BANNER -->
+  <div class="sync-banner" id="syncBanner">
+    <div class="sync-banner-row">
+      <span id="syncBannerText">Leads waiting to sync</span>
+      <button class="sync-now-btn" id="btnSyncNow">Sync now</button>
+    </div>
+    <div class="progress-track" id="syncProgressTrack">
+      <div class="progress-fill" id="syncProgressFill"></div>
+    </div>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="step active" id="step1">
+      <div class="step-node" id="sn1">1</div>
+      <div class="step-name">Card</div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-node" id="sn2">2</div>
+      <div class="step-name">Audio</div>
+    </div>
+    <div class="step" id="step3">
+      <div class="step-node" id="sn3">3</div>
+      <div class="step-name">Photo</div>
+    </div>
+  </div>
+
+  <!-- CARD: VISITING CARD -->
+  <div class="card is-active" id="cardCard">
+    <div class="card-head">
+      <div class="card-icon"><svg viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="14"><rect x="1" y="1" width="18" height="12" rx="2" stroke="#3E7BFA" stroke-width="1.5"/><rect x="1" y="4.5" width="18" height="2.5" fill="#3E7BFA" opacity=".4"/><rect x="3.5" y="8.5" width="5" height="1.5" rx=".75" fill="#3E7BFA"/></svg></div>
+      <div>
+        <div class="card-title">Visiting Card</div>
+        <div class="card-sub">Scan the card to fill details automatically</div>
+      </div>
+    </div>
+
+    <video id="cardVideo" autoplay playsinline></video>
+    <img class="preview" id="cardPreview" alt="Visiting card" />
+
+    <button class="btn-scan" id="btnScanCard">Scan Visiting Card</button>
+
+    <div class="status-row">
+      <span class="dot" id="cardDot"></span>
+      <span id="cardStatus">Ready to scan</span>
+    </div>
+
+    <div class="extracted" id="extractedBlock">
+      <div class="extracted-head">Extracted — please verify</div>
+      <div class="ef-row" id="efRowName"        style="display:none"><span class="ef-key">Name</span>       <span class="ef-val" id="efName"></span></div>
+      <div class="ef-row" id="efRowDesignation" style="display:none"><span class="ef-key">Title</span>      <span class="ef-val" id="efDesignation"></span></div>
+      <div class="ef-row" id="efRowEmail"        style="display:none"><span class="ef-key">Email</span>      <span class="ef-val" id="efEmail"></span></div>
+      <div class="ef-row" id="efRowPhone"        style="display:none"><span class="ef-key">Phone</span>      <span class="ef-val" id="efPhone"></span></div>
+      <div class="ef-row" id="efRowCompany"      style="display:none"><span class="ef-key">Company</span>   <span class="ef-val" id="efCompany"></span></div>
+    </div>
+  </div>
+
+  <!-- CARD: AUDIO -->
+  <div class="card" id="audioCard">
+    <div class="card-head">
+      <div class="card-icon red-bg"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect x="7" y="2" width="6" height="9" rx="3" stroke="#D65A56" stroke-width="1.5"/><path d="M4 10a6 6 0 0 0 12 0" stroke="#D65A56" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="16" x2="10" y2="19" stroke="#D65A56" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="19" x2="13" y2="19" stroke="#D65A56" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div>
+        <div class="card-title">Conversation</div>
+        <div class="card-sub">Record while speaking with the customer</div>
+      </div>
+    </div>
+
+    <button class="btn-record" id="btnRecord">Start Recording</button>
+    <button class="btn-stop" id="btnStop">Stop Recording</button>
+
+    <div class="status-row">
+      <span class="dot" id="audioDot"></span>
+      <span id="audioStatus">Ready to record</span>
+    </div>
+    <audio id="audioPreview" controls></audio>
+  </div>
+
+  <!-- CARD: PHOTO -->
+  <div class="card" id="photoCard">
+    <div class="card-head">
+      <div class="card-icon green-bg"><svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="7" r="3.5" stroke="#2FA36B" stroke-width="1.5"/><path d="M3.5 17c0-3.314 2.91-6 6.5-6s6.5 2.686 6.5 6" stroke="#2FA36B" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div>
+        <div class="card-title">Memory Photo</div>
+        <div class="card-sub">Optional — helps identify the lead</div>
+      </div>
+    </div>
+
+    <div class="video-wrap" id="photoVideoWrap">
+      <video id="photoVideo" autoplay playsinline muted></video>
+      <button type="button" class="btn-switch-cam" id="btnSwitchCam" aria-label="Switch camera">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17 3a1 1 0 011 1v1.05a7 7 0 015 6.95h-2a5 5 0 00-8.9-3.1L14 11H9V6l1.6 1.6A6.98 6.98 0 0117 3zM7 21a1 1 0 01-1-1v-1.05a7 7 0 01-5-6.95h2a5 5 0 008.9 3.1L10 13h5v5l-1.6-1.6A6.98 6.98 0 017 21z" fill="#fff"/></svg>
+      </button>
+    </div>
+    <img class="preview" id="photoPreview" alt="Customer" />
+
+    <button class="btn-photo" id="btnPhoto">Capture Photo</button>
+
+    <div class="status-row">
+      <span class="dot" id="photoDot"></span>
+      <span id="photoStatus">Ready</span>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="submit-wrap">
+    <button class="btn-submit" id="btnSubmit">Submit Lead</button>
+    <div class="submit-status" id="submitStatus">
+      <div class="submit-status-row">
+        <span class="dot" id="submitDot"></span>
+        <span id="submitStatusText">Uploading…</span>
+      </div>
+      <div class="submit-prog-track" id="submitProgTrack">
+        <div class="submit-prog-fill" id="submitProgFill"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+/* ── SERVICE WORKER ─────────────────────────────── */
+if ("serviceWorker" in navigator)
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
+
+const API_BASE = window.LEAD_CAPTURE_API_BASE || "https://lead-capture-system-xxfp.onrender.com";
+
+/* ── AUTH ─────────────────────────────────────── */
+const REP_KEY = "lead_capture_rep_name";
+const repName = localStorage.getItem(REP_KEY);
+if (!repName) location.href = "index.html";
+document.getElementById("repNameDisplay").textContent = repName || "";
+document.getElementById("switchUserLink").addEventListener("click", e => {
+  e.preventDefault(); localStorage.removeItem(REP_KEY); location.href = "index.html";
+});
+
+/* ── TOAST ─────────────────────────────────────── */
+const toastEl = document.getElementById("toast");
+let _tt;
+function toast(msg, type="info") {
+  toastEl.textContent = msg;
+  toastEl.className = type === "error" ? "error" : type === "success" ? "success" : "";
+  toastEl.classList.add("show");
+  clearTimeout(_tt);
+  _tt = setTimeout(() => toastEl.classList.remove("show"), 3200);
+}
+
+/* ── STEPPER ─────────────────────────────────── */
+function stepper(c, a, p) {
+  const steps = [
+    [document.getElementById("step1"), document.getElementById("sn1"), c],
+    [document.getElementById("step2"), document.getElementById("sn2"), a],
+    [document.getElementById("step3"), document.getElementById("sn3"), p],
+  ];
+  const nextIdx = steps.findIndex(([,,done]) => !done);
+  steps.forEach(([el, node, done], i) => {
+    el.className = "step" + (done ? " done" : i === nextIdx ? " active" : "");
+    node.textContent = done ? "✓" : String(i + 1);
+  });
+  // card borders
+  const cards = ["cardCard","audioCard","photoCard"];
+  cards.forEach((id, i) => {
+    const el = document.getElementById(id);
+    const done = steps[i][2];
+    const isNext = i === nextIdx;
+    el.className = "card" + (done ? " is-done" : isNext ? " is-active" : "");
+  });
+}
+stepper(false, false, false);
+
+/* ── INDEXEDDB QUEUE ─────────────────────────── */
+function openDB() {
+  return new Promise((res,rej) => {
+    const r = indexedDB.open("lead_capture_offline", 1);
+    r.onupgradeneeded = e => e.target.result.createObjectStore("queue", { keyPath:"id" });
+    r.onsuccess = e => res(e.target.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+// Blobs can't be stored in IndexedDB on Safari/iOS — convert to
+// ArrayBuffer (always serialisable) before writing, restore on read.
+// blob.arrayBuffer() isn't available on older Android WebViews —
+// fall back to FileReader which works everywhere.
+function blobToAB(blob) {
+  if (!blob) return Promise.resolve(null);
+  if (typeof blob.arrayBuffer === "function") return blob.arrayBuffer();
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload  = () => res(fr.result);
+    fr.onerror = () => rej(fr.error);
+    fr.readAsArrayBuffer(blob);
+  });
+}
+function abToBlob(ab, type) { return ab ? new Blob([ab], { type }) : null; }
+
+async function qAdd(rec) {
+  const db = await openDB();
+  // Serialise all Blobs to ArrayBuffers before storing
+  const row = Object.assign({}, rec, {
+    audioBlob:  await blobToAB(rec.audioBlob),
+    audioType:  rec.audioBlob ? rec.audioBlob.type : "audio/webm",
+    photoBlob:  await blobToAB(rec.photoBlob),
+    photoType:  rec.photoBlob ? rec.photoBlob.type : "image/jpeg",
+    cardBlob:   await blobToAB(rec.cardBlob),
+    cardType:   rec.cardBlob  ? rec.cardBlob.type  : "image/jpeg",
+  });
+  return new Promise((res,rej) => {
+    const tx = db.transaction("queue","readwrite");
+    tx.objectStore("queue").put(row);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function qAll() {
+  const db = await openDB();
+  const rows = await new Promise((res,rej) => {
+    const r = db.transaction("queue","readonly").objectStore("queue").getAll();
+    r.onsuccess = () => res(r.result||[]); r.onerror = () => rej(r.error);
+  });
+  // Restore ArrayBuffers back to Blobs for use in FormData
+  return rows.map(row => Object.assign({}, row, {
+    audioBlob: abToBlob(row.audioBlob, row.audioType || "audio/webm"),
+    photoBlob: abToBlob(row.photoBlob, row.photoType || "image/jpeg"),
+    cardBlob:  row.cardBlob ? abToBlob(row.cardBlob, row.cardType || "image/jpeg") : null,
+  }));
+}
+async function qDel(id)   { const db=await openDB(); return new Promise((res,rej)=>{ const tx=db.transaction("queue","readwrite"); tx.objectStore("queue").delete(id); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); }
+function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+
+/* ── CONNECTION ──────────────────────────────── */
+const connBadge = document.getElementById("connBadge");
+const syncBanner = document.getElementById("syncBanner");
+const syncText = document.getElementById("syncBannerText");
+const syncFill = document.getElementById("syncProgressFill");
+const syncTrack = document.getElementById("syncProgressTrack");
+
+function setConn(online) {
+  connBadge.className = "conn-badge" + (online ? "" : " offline");
+  document.getElementById("connLabel").textContent = online ? "Online" : "Offline";
+  document.body.style.overscrollBehaviorY = online ? "auto" : "contain";
+}
+async function refreshBanner() {
+  const q = await qAll().catch(()=>[]);
+  syncBanner.classList.toggle("show", q.length > 0);
+  if (q.length) syncText.textContent = `${q.length} lead${q.length>1?"s":""} waiting to sync`;
+}
+
+/* ── SEND ─────────────────────────────────────── */
+function sendToBackend(rec, onProg) {
+  return new Promise((res,rej) => {
+    const fd = new FormData();
+    fd.append("client_lead_id", rec.id);
+    fd.append("rep_name",    rec.repName||"");
+    fd.append("name",        rec.name||"");
+    fd.append("email",       rec.email||"");
+    fd.append("phone",       rec.phone||"");
+    fd.append("company",     rec.company||"");
+    fd.append("designation", rec.designation||"");
+    fd.append("quantity",    "1");
+    fd.append("audio",     rec.audioBlob, "conversation.webm");
+    fd.append("photo",     rec.photoBlob, "customer.jpg");
+    if (rec.cardBlob) fd.append("card_photo", rec.cardBlob, "visiting_card.jpg");
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE}/api/submit-lead`);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProg) onProg(Math.round(e.loaded/e.total*100)); };
+    xhr.onload = () => { if (xhr.status>=200&&xhr.status<300){try{res(JSON.parse(xhr.responseText))}catch{res({})}}else rej(new Error(xhr.responseText||`HTTP ${xhr.status}`)); };
+    xhr.onerror = () => rej(new Error("Network error"));
+    xhr.send(fd);
+  });
+}
+
+/* ── SYNC ─────────────────────────────────────── */
+let syncing = false;
+async function syncQueue({ silent=true }={}) {
+  if (syncing||!navigator.onLine) { await refreshBanner(); return; }
+  syncing = true;
+  try {
+    const q = await qAll(), total = q.length; let sent=0;
+    if (!total) return;
+    // Always show the banner while uploading so the rep can see
+    // background progress even when the form has already reset.
+    syncBanner.classList.add("show");
+    syncText.textContent = `Uploading ${total} lead${total>1?"s":""}…`;
+    syncTrack.classList.add("show");
+    for (let i=0; i<total; i++) {
+      try {
+        await sendToBackend(q[i], pct => {
+          const ov = Math.round((i+pct/100)/total*100);
+          syncFill.style.width = ov+"%";
+          syncText.textContent = `Uploading ${i+1}/${total} — ${ov}%`;
+        });
+        await qDel(q[i].id); sent++;
+        syncFill.style.width = Math.round((i+1)/total*100)+"%";
+      } catch(err) {
+        console.error("Upload failed:", err);
+        toast("Upload error — will retry automatically.", "error");
+        break;
+      }
+    }
+    if (sent && !silent) toast(`${sent} lead${sent>1?"s":""} synced`, "success");
+  } finally {
+    syncing=false; syncTrack.classList.remove("show"); syncFill.style.width="0%";
+    await refreshBanner();
+  }
+}
+window.addEventListener("online",  () => { setConn(true);  syncQueue({silent:false}); });
+window.addEventListener("offline", () => setConn(false));
+document.getElementById("btnSyncNow").addEventListener("click", () => syncQueue({silent:false}));
+setInterval(() => syncQueue(), 20000);
+setConn(navigator.onLine); refreshBanner();
+if (navigator.onLine) syncQueue();
+
+/* ── STATE ─────────────────────────────────────── */
+let cardBlob=null, cardExtracted={}, audioBlob=null, photoBlob=null;
+
+/* ── STEP 1: CARD ───────────────────────────── */
+const btnScanCard = document.getElementById("btnScanCard");
+const cardVideo   = document.getElementById("cardVideo");
+const cardPreview = document.getElementById("cardPreview");
+const cardDot     = document.getElementById("cardDot");
+const cardSt      = document.getElementById("cardStatus");
+const extBlock    = document.getElementById("extractedBlock");
+let cardStream=null, cardArmed=false;
+
+function showExtracted(f) {
+  [["efRowName","efName",f.name],
+   ["efRowDesignation","efDesignation",f.designation],
+   ["efRowEmail","efEmail",f.email],
+   ["efRowPhone","efPhone",f.phone],
+   ["efRowCompany","efCompany",f.company]
+  ].forEach(([rid,vid,val]) => {
+    document.getElementById(rid).style.display = val ? "flex" : "none";
+    if (val) document.getElementById(vid).textContent = val;
+  });
+  if (Object.values(f).some(Boolean)) extBlock.classList.add("show");
+}
+
+btnScanCard.addEventListener("click", async () => {
+  if (!cardArmed) {
+    try {
+      cardStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+      cardVideo.srcObject = cardStream;
+      cardVideo.style.display = "block";
+      cardPreview.style.display = "none";
+      cardArmed = true;
+      btnScanCard.textContent = "Snap Card";
+      
+      
+    } catch { toast("Camera access denied.", "error"); }
+    return;
+  }
+  const cv = document.createElement("canvas");
+  cv.width=cardVideo.videoWidth; cv.height=cardVideo.videoHeight;
+  cv.getContext("2d").drawImage(cardVideo,0,0);
+  cv.toBlob(async blob => {
+    cardBlob = blob;
+    cardPreview.src = URL.createObjectURL(blob);
+    cardPreview.style.display = "block";
+    cardVideo.style.display = "none";
+    cardStream.getTracks().forEach(t=>t.stop());
+    cardArmed = false;
+    btnScanCard.className = "btn-done";
+    btnScanCard.textContent = "Rescan Card";
+    
+    cardDot.className = "dot active";
+    cardSt.textContent = "Reading card…";
+
+    if (navigator.onLine) {
+      try {
+        const fd = new FormData(); fd.append("card", blob, "card.jpg");
+        const d = await (await fetch(`${API_BASE}/api/scan-card`,{method:"POST",body:fd})).json();
+        if (d.status==="success" && d.fields) {
+          cardExtracted = d.fields;
+          const n = Object.values(d.fields).filter(Boolean).length;
+          cardDot.className = "dot done";
+          cardSt.textContent = n ? `${n} detail${n>1?"s":""} extracted — please verify` : "Card saved";
+          if (n) showExtracted(d.fields);
+        } else {
+          cardDot.className = "dot warn"; cardSt.textContent = "Card saved — text not readable";
+        }
+      } catch {
+        cardDot.className = "dot done"; cardSt.textContent = "Saved offline — uploads with lead";
+      }
+    } else {
+      cardDot.className = "dot done"; cardSt.textContent = "Card saved — uploads when online";
+    }
+    stepper(true, !!audioBlob, !!photoBlob);
+  }, "image/jpeg", 0.92);
+});
+
+/* ── STEP 2: AUDIO ──────────────────────────── */
+let mr, chunks=[];
+const btnRecord = document.getElementById("btnRecord");
+const btnStop   = document.getElementById("btnStop");
+const audioDot  = document.getElementById("audioDot");
+const audioSt   = document.getElementById("audioStatus");
+const audioPreview = document.getElementById("audioPreview");
+
+btnRecord.addEventListener("click", async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks=[];
+    mr = new MediaRecorder(stream);
+    mr.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+    mr.onstop = () => {
+      audioBlob = new Blob(chunks,{type:"audio/webm"});
+      audioPreview.src = URL.createObjectURL(audioBlob);
+      audioPreview.style.display = "block";
+      audioDot.className = "dot done";
+      audioSt.textContent = "Recording saved";
+      stream.getTracks().forEach(t=>t.stop());
+      stepper(!!cardBlob, true, !!photoBlob);
+    };
+    mr.start();
+    audioDot.className = "dot active";
+    audioSt.textContent = "Recording…";
+    btnRecord.style.display="none"; btnStop.style.display="flex";
+  } catch { toast("Microphone access denied.", "error"); }
+});
+btnStop.addEventListener("click", () => {
+  if (mr && mr.state!=="inactive") mr.stop();
+  btnRecord.style.display="flex"; btnStop.style.display="none";
+});
+
+/* ── STEP 3: PHOTO ──────────────────────────── */
+const btnPhoto     = document.getElementById("btnPhoto");
+const photoVideo   = document.getElementById("photoVideo");
+const photoPreview = document.getElementById("photoPreview");
+const photoDot     = document.getElementById("photoDot");
+const photoSt      = document.getElementById("photoStatus");
+const btnSwitchCam = document.getElementById("btnSwitchCam");
+let photoStream=null, photoArmed=false, photoFacingMode="user";
+
+async function startPhotoStream(facingMode) {
+  const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode}});
+  if (photoStream) photoStream.getTracks().forEach(t=>t.stop());
+  photoStream = stream;
+  photoFacingMode = facingMode;
+  photoVideo.srcObject = stream;
+  photoVideo.classList.toggle("rear-cam", facingMode === "environment");
+}
+
+btnPhoto.addEventListener("click", async () => {
+  if (!photoArmed) {
+    try {
+      await startPhotoStream("user");
+      photoVideo.style.display = "block";
+      photoPreview.style.display = "none";
+      btnSwitchCam.style.display = "flex";
+      photoArmed = true;
+      btnPhoto.textContent = "Snap Photo";
+      
+      
+    } catch { toast("Camera access denied.", "error"); }
+    return;
+  }
+  const cv = document.createElement("canvas");
+  cv.width=photoVideo.videoWidth; cv.height=photoVideo.videoHeight;
+  const ctx = cv.getContext("2d");
+  if (photoFacingMode === "user") {
+    // Undo the mirrored preview so the saved photo reads naturally.
+    ctx.translate(cv.width, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(photoVideo,0,0);
+  cv.toBlob(blob => {
+    photoBlob = blob;
+    photoPreview.src = URL.createObjectURL(blob);
+    photoPreview.style.display="block"; photoVideo.style.display="none";
+    btnSwitchCam.style.display = "none";
+    photoStream.getTracks().forEach(t=>t.stop()); photoArmed=false;
+    btnPhoto.className = "btn-done";
+    btnPhoto.textContent = "Retake Photo";
+    
+    photoDot.className = "dot done"; photoSt.textContent = "Photo captured";
+    stepper(!!cardBlob, !!audioBlob, true);
+  }, "image/jpeg", 0.9);
+});
+
+btnSwitchCam.addEventListener("click", async () => {
+  const next = photoFacingMode === "user" ? "environment" : "user";
+  try {
+    await startPhotoStream(next);
+  } catch { toast("Unable to switch camera.", "error"); }
+});
+
+/* ── SUBMIT ─────────────────────────────────── */
+const btnSubmit   = document.getElementById("btnSubmit");
+const submitSt    = document.getElementById("submitStatus");
+const submitDot   = document.getElementById("submitDot");
+const submitStTxt = document.getElementById("submitStatusText");
+const submitTrack = document.getElementById("submitProgTrack");
+const submitFill  = document.getElementById("submitProgFill");
+
+function setSubProg(pct) {
+  submitTrack.classList.add("show"); submitFill.style.width=pct+"%";
+  submitStTxt.textContent = pct < 100 ? `Uploading — ${pct}%` : "Uploaded";
+}
+
+btnSubmit.addEventListener("click", () => {
+  if (!audioBlob) { toast("Please record the conversation first.", "error"); return; }
+  btnSubmit.disabled = true;
+
+  const rec = {
+    id: uid(), repName: repName||"",
+    name: cardExtracted.name||"", email: cardExtracted.email||"",
+    phone: cardExtracted.phone||"", company: cardExtracted.company||"",
+    designation: cardExtracted.designation||"",
+    audioBlob,
+    photoBlob: photoBlob || cardBlob || new Blob([],{type:"image/jpeg"}),
+    cardBlob: cardBlob||null,
+  };
+
+  // Reset the form immediately — rep is free for the next customer.
+  toast("Lead saved — uploading in background.", "success");
+  reset();
+
+  // Run upload entirely off the UI thread so reset paints first.
+  setTimeout(async () => {
+    if (!navigator.onLine) {
+      // Offline — save to queue, will upload automatically when online.
+      try {
+        await qAdd(rec);
+        refreshBanner();
+      } catch(err) {
+        console.error("Offline qAdd failed:", err);
+      }
+      return;
+    }
+
+    // Single upload path — always queue, always sync via syncQueue.
+    // Never send directly AND queue at the same time — that's what
+    // caused duplicate sheet rows (both paths succeeded and wrote twice).
+    try {
+      await qAdd(rec);
+      refreshBanner();
+      syncQueue({ silent: true });
+    } catch(err) {
+      console.error("qAdd failed:", err);
+      // Storage failed — last resort direct send so lead isn't lost
+      if (navigator.onLine) {
+        try { await sendToBackend(rec, () => {}); }
+        catch(e) { toast("Upload failed — please try again.", "error"); }
+      }
+    }
+  }, 0);
+});
+
+/* ── RESET ──────────────────────────────────── */
+function reset() {
+  cardBlob=null; cardExtracted={};
+  cardPreview.style.display="none"; cardPreview.removeAttribute("src");
+  cardVideo.style.display="none";
+  if(cardStream){cardStream.getTracks().forEach(t=>t.stop());cardStream=null;}
+  cardArmed=false;
+  btnScanCard.className="btn-scan";
+  btnScanCard.textContent="Scan Visiting Card";
+  
+  cardDot.className="dot"; cardSt.textContent="Ready to scan";
+  extBlock.classList.remove("show");
+  ["efRowName","efRowDesignation","efRowEmail","efRowPhone","efRowCompany"].forEach(id=>document.getElementById(id).style.display="none");
+
+  audioBlob=null;
+  audioPreview.style.display="none"; audioPreview.removeAttribute("src");
+  audioDot.className="dot"; audioSt.textContent="Ready to record";
+  btnRecord.style.display="flex"; btnStop.style.display="none";
+
+  photoBlob=null;
+  photoPreview.style.display="none"; photoPreview.removeAttribute("src");
+  photoVideo.style.display="none"; photoVideo.classList.remove("rear-cam");
+  if(photoStream){photoStream.getTracks().forEach(t=>t.stop());photoStream=null;}
+  photoArmed=false; photoFacingMode="user";
+  btnSwitchCam.style.display="none";
+  btnPhoto.className="btn-photo";
+  btnPhoto.textContent="Capture Photo";
+  
+  photoDot.className="dot"; photoSt.textContent="Ready";
+
+  btnSubmit.disabled=false; submitSt.style.display="none";
+  submitTrack.classList.remove("show"); submitFill.style.width="0%";
+  stepper(false,false,false);
+}
+</script>
+</body>
+</html>
